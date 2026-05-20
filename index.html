@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로또 생성기 v1.0</title>
+    <style>
+        /* --- 테마 설정 --- */
+        /* 기본(노랑) 테마 */
+        :root {
+            --bg-color: #fff9e6;
+            --text-color: #333333;
+            --btn-color: #ffc107;
+            --btn-hover: #e0a800;
+            --sidebar-bg: #ffffff;
+            --header-shadow: rgba(0, 0, 0, 0.05);
+        }
+        /* 검은색 테마 */
+        body.theme-black {
+            --bg-color: #1a1a1a;
+            --text-color: #f5f5f5;
+            --btn-color: #444444;
+            --btn-hover: #555555;
+            --sidebar-bg: #2d2d2d;
+            --header-shadow: rgba(255, 255, 255, 0.05);
+        }
+        /* 회색 테마 */
+        body.theme-gray {
+            --bg-color: #e0e0e0;
+            --text-color: #222222;
+            --btn-color: #757575;
+            --btn-hover: #616161;
+            --sidebar-bg: #f5f5f5;
+            --header-shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Malgun Gothic', sans-serif;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.4s, color 0.4s;
+            text-align: center;
+            overflow-x: hidden;
+        }
+
+        /* --- 상단 헤더 --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: var(--bg-color);
+            box-shadow: 0 2px 5px var(--header-shadow);
+        }
+        .version-badge {
+            background-color: var(--btn-color);
+            color: #fff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            transition: background-color 0.4s;
+        }
+        .hamburger {
+            font-size: 28px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            padding: 0;
+            transition: color 0.4s;
+        }
+
+        /* --- 슬라이드 사이드바 --- */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px; /* 평소엔 화면 밖에 숨김 */
+            width: 250px;
+            height: 100%;
+            background-color: var(--sidebar-bg);
+            box-shadow: -2px 0 10px rgba(0,0,0,0.2);
+            transition: right 0.4s ease, background-color 0.4s;
+            padding: 25px;
+            text-align: left;
+            z-index: 1000;
+        }
+        .sidebar.open {
+            right: 0; /* 클래스가 추가되면 화면 안으로 들어옴 */
+        }
+        .close-btn {
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            float: right;
+        }
+        
+        /* --- 개발자의 말 --- */
+        .dev-message {
+            margin-top: 60px;
+            padding: 20px;
+            background-color: rgba(150, 150, 150, 0.1);
+            border-radius: 10px;
+            line-height: 1.6;
+            border-left: 4px solid var(--btn-color);
+        }
+        .dev-message h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .dev-message p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* --- 테마 버튼 --- */
+        .theme-options {
+            margin-top: 40px;
+        }
+        .theme-options h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .theme-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #fff;
+            transition: opacity 0.2s;
+        }
+        .theme-btn:hover { opacity: 0.8; }
+        .btn-yellow { background-color: #ffc107; color: #333; }
+        .btn-black { background-color: #1a1a1a; border: 1px solid #555; }
+        .btn-gray { background-color: #757575; }
+
+        /* --- 메인 컨텐츠 --- */
+        .main-content {
+            padding: 60px 20px;
+        }
+        .main-content h1 {
+            margin-bottom: 10px;
+        }
+        .generate-btn {
+            padding: 15px 35px;
+            font-size: 20px;
+            background-color: var(--btn-color);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.4s, transform 0.1s;
+            margin-top: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .generate-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* --- 로또 공 디자인 --- */
+        .result-container {
+            margin-top: 50px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            min-height: 60px;
+        }
+        .ball {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.3), 0 4px 6px rgba(0,0,0,0.2);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+            /* 공이 나타날 때 튀어오르는 애니메이션 */
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="theme-yellow"> <!-- 기본 시작 테마: 노랑 -->
+
+    <!-- 상단 헤더 영역 -->
+    <div class="header">
+        <div class="version-badge">v 1.0</div>
+        <!-- 삼선 메뉴 버튼 -->
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    </div>
+
+    <!-- 숨겨진 사이드바 (서랍장) -->
+    <div class="sidebar" id="sidebar">
+        <button class="close-btn" onclick="toggleSidebar()">✖</button>
+        
+        <!-- 개발자의 말 -->
+        <div class="dev-message">
+            <h3>👨‍💻 개발자의 말</h3>
+            <p>안녕하세요!<br>드디어 제 2째 코딩 작품입니다.<br>많은 관심 주세요!</p>
+        </div>
+
+        <!-- 테마 변경 버튼들 -->
+        <div class="theme-options">
+            <h3>🎨 테마 변경</h3>
+            <button class="theme-btn btn-yellow" onclick="changeTheme('theme-yellow')">노랑색 테마</button>
+            <button class="theme-btn btn-black" onclick="changeTheme('theme-black')">검은색 테마</button>
+            <button class="theme-btn btn-gray" onclick="changeTheme('theme-gray')">회색 테마</button>
+        </div>
+    </div>
+
+    <!-- 메인 화면 영역 -->
+    <div class="main-content">
+        <h1>🎰 행운의 로또 생성기</h1>
+        <p>버튼을 눌러 나만의 행운 번호를 뽑아보세요!</p>
+        
+        <button class="generate-btn" onclick="generateLotto()">번호 추첨하기</button>
+
+        <!-- 번호가 나타날 공간 -->
+        <div class="result-container" id="result"></div>
+    </div>
+
+    <script>
+        // 1. 사이드바(메뉴) 열고 닫는 기능
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // 2. 테마 변경 기능
+        function changeTheme(themeName) {
+            document.body.className = themeName;
+        }
+
+        // 3. 실제 로또 공 색상 판별 기능
+        function getBallColor(num) {
+            if (num <= 10) return '#fbc400'; // 1~10: 노랑
+            if (num <= 20) return '#69c8f2'; // 11~20: 파랑
+            if (num <= 30) return '#ff7272'; // 21~30: 빨강
+            if (num <= 40) return '#aaaaaa'; // 31~40: 회색
+            return '#b0d840';                // 41~45: 초록
+        }
+
+        // 4. 로또 번호 생성 기능
+        function generateLotto() {
+            const numbers = [];
+            
+            // 중복 없이 6개 번호 뽑기
+            while(numbers.length < 6) {
+                const num = Math.floor(Math.random() * 45) + 1;
+                if(!numbers.includes(num)) {
+                    numbers.push(num);
+                }
+            }
+            
+            // 번호를 오름차순으로 정렬
+            numbers.sort((a, b) => a - b);
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = ''; // 기존에 뽑은 번호 지우기
+
+            // 0.1초(100ms) 간격으로 공이 하나씩 나타나는 효과
+            numbers.forEach((num, index) => {
+                setTimeout(() => {
+                    const ball = document.createElement('div');
+                    ball.className = 'ball';
+                    ball.innerText = num;
+                    ball.style.backgroundColor = getBallColor(num); // 색상 적용
+                    resultDiv.appendChild(ball);
+                }, index * 100); 
+            });
+        }
+    </script>
+</body>
+</html>

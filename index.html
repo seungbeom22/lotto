@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로또 생성기 v1.2</title>
+    <title>로또 생성기 v1.3</title>
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; text-align: center; padding: 20px; background-color: #f8f9fa; }
         .result-container { display: flex; justify-content: center; gap: 5px; margin: 30px 0; min-height: 50px; }
         .ball { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
         button { padding: 12px 20px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-gen { background-color: #ffc107; }
+        .btn-save { background-color: #4caf50; color: white; }
         .btn-clear { background-color: #ff3b30; color: white; }
         #history { margin-top: 30px; }
         .history-item { margin: 8px 0; font-size: 14px; color: #555; }
@@ -21,18 +22,19 @@
     
     <div class="action-btns">
         <button class="btn-gen" onclick="generateLotto()">번호 추첨하기</button>
+        <button class="btn-save" onclick="saveLotto()">기록 저장하기</button>
         <button class="btn-clear" onclick="clearHistory()">전체 기록 지우기</button>
     </div>
 
     <div class="result-container" id="result"></div>
     
     <div id="history">
-        <h3>📜 최근 추첨 기록</h3>
+        <h3>📜 추첨 기록</h3>
         <div id="history-list"></div>
     </div>
 
     <script>
-        // 1. 페이지 로드 시 기존 기록 불러오기
+        let currentNumbers = [];
         let lottoHistory = JSON.parse(localStorage.getItem('lottoHistory')) || [];
         updateHistoryUI();
 
@@ -45,26 +47,30 @@
         }
 
         function generateLotto() {
-            const numbers = [];
-            while(numbers.length < 6) {
+            currentNumbers = [];
+            while(currentNumbers.length < 6) {
                 const num = Math.floor(Math.random() * 45) + 1;
-                if(!numbers.includes(num)) numbers.push(num);
+                if(!currentNumbers.includes(num)) currentNumbers.push(num);
             }
-            numbers.sort((a, b) => a - b);
+            currentNumbers.sort((a, b) => a - b);
 
-            // 화면 표시
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = '';
-            numbers.forEach(num => {
+            currentNumbers.forEach(num => {
                 const ball = document.createElement('div');
                 ball.className = 'ball';
                 ball.innerText = num;
                 ball.style.backgroundColor = getBallColor(num);
                 resultDiv.appendChild(ball);
             });
+        }
 
-            // 기록 저장 및 로컬 스토리지 업데이트
-            lottoHistory.unshift(numbers.join(', ')); // 최신 기록을 맨 앞에
+        function saveLotto() {
+            if (currentNumbers.length === 0) {
+                alert("먼저 번호를 추첨해주세요!");
+                return;
+            }
+            lottoHistory.unshift(currentNumbers.join(', '));
             localStorage.setItem('lottoHistory', JSON.stringify(lottoHistory));
             updateHistoryUI();
         }

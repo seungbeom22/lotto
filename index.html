@@ -3,28 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로또 생성기 v1.1</title>
+    <title>로또 생성기 v1.2</title>
     <style>
-        /* 기존 테마 설정 유지 */
-        :root { --bg-color: #fff9e6; --text-color: #333333; --btn-color: #ffc107; --sidebar-bg: #ffffff; }
-        body.theme-black { --bg-color: #1a1a1a; --text-color: #f5f5f5; --btn-color: #444444; --sidebar-bg: #2d2d2d; }
-        body.theme-gray { --bg-color: #e0e0e0; --text-color: #222222; --btn-color: #757575; --sidebar-bg: #f5f5f5; }
-
-        body { background-color: var(--bg-color); color: var(--text-color); font-family: 'Malgun Gothic', sans-serif; transition: 0.4s; text-align: center; margin: 0; padding: 20px; }
-        
-        /* 공 스타일: 일렬 배치 핵심 */
+        body { font-family: 'Malgun Gothic', sans-serif; text-align: center; padding: 20px; background-color: #f8f9fa; }
         .result-container { display: flex; justify-content: center; gap: 5px; margin: 30px 0; min-height: 50px; }
-        .ball { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 16px; flex-shrink: 0; }
-        
-        /* 버튼 스타일 */
-        .action-btns { margin-top: 20px; }
+        .ball { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
         button { padding: 12px 20px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-gen { background-color: var(--btn-color); }
-        .btn-save { background-color: #4caf50; color: white; }
-
-        /* 기록 영역 */
-        #history { margin-top: 30px; text-align: center; }
-        .history-item { margin: 8px 0; font-size: 15px; }
+        .btn-gen { background-color: #ffc107; }
+        .btn-clear { background-color: #ff3b30; color: white; }
+        #history { margin-top: 30px; }
+        .history-item { margin: 8px 0; font-size: 14px; color: #555; }
     </style>
 </head>
 <body>
@@ -33,17 +21,20 @@
     
     <div class="action-btns">
         <button class="btn-gen" onclick="generateLotto()">번호 추첨하기</button>
-        <button class="btn-save" onclick="saveLotto()">기록 저장하기</button>
+        <button class="btn-clear" onclick="clearHistory()">전체 기록 지우기</button>
     </div>
 
     <div class="result-container" id="result"></div>
     
     <div id="history">
-        <h3>📜 추첨 기록</h3>
+        <h3>📜 최근 추첨 기록</h3>
+        <div id="history-list"></div>
     </div>
 
     <script>
-        let currentNumbers = []; // 현재 화면에 떠 있는 번호
+        // 1. 페이지 로드 시 기존 기록 불러오기
+        let lottoHistory = JSON.parse(localStorage.getItem('lottoHistory')) || [];
+        updateHistoryUI();
 
         function getBallColor(num) {
             if (num <= 10) return '#fbc400';
@@ -53,37 +44,48 @@
             return '#b0d840';
         }
 
-        // 1. 번호 생성 (저장은 아직 안 함)
         function generateLotto() {
-            currentNumbers = [];
-            while(currentNumbers.length < 6) {
+            const numbers = [];
+            while(numbers.length < 6) {
                 const num = Math.floor(Math.random() * 45) + 1;
-                if(!currentNumbers.includes(num)) currentNumbers.push(num);
+                if(!numbers.includes(num)) numbers.push(num);
             }
-            currentNumbers.sort((a, b) => a - b);
+            numbers.sort((a, b) => a - b);
 
+            // 화면 표시
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = '';
-            currentNumbers.forEach(num => {
+            numbers.forEach(num => {
                 const ball = document.createElement('div');
                 ball.className = 'ball';
                 ball.innerText = num;
                 ball.style.backgroundColor = getBallColor(num);
                 resultDiv.appendChild(ball);
             });
+
+            // 기록 저장 및 로컬 스토리지 업데이트
+            lottoHistory.unshift(numbers.join(', ')); // 최신 기록을 맨 앞에
+            localStorage.setItem('lottoHistory', JSON.stringify(lottoHistory));
+            updateHistoryUI();
         }
 
-        // 2. 저장 버튼 눌렀을 때만 기록 추가
-        function saveLotto() {
-            if (currentNumbers.length === 0) {
-                alert("먼저 번호를 추첨해주세요!");
-                return;
+        function clearHistory() {
+            if(confirm("정말로 모든 기록을 삭제하시겠습니까?")) {
+                lottoHistory = [];
+                localStorage.removeItem('lottoHistory');
+                updateHistoryUI();
             }
-            const historyDiv = document.getElementById('history');
-            const p = document.createElement('p');
-            p.className = 'history-item';
-            p.innerText = `기록: ${currentNumbers.join(', ')}`;
-            historyDiv.appendChild(p);
+        }
+
+        function updateHistoryUI() {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            lottoHistory.forEach((item, index) => {
+                const p = document.createElement('p');
+                p.className = 'history-item';
+                p.innerText = `${lottoHistory.length - index}회차: [ ${item} ]`;
+                historyList.appendChild(p);
+            });
         }
     </script>
 </body>

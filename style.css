@@ -1,14 +1,27 @@
+/* result-container 수정 */
 .result-container {
+    margin-top: 50px;
     display: flex;
     justify-content: center;
-    gap: 5px;            /* 공 사이 간격 조금 좁게 */
-    flex-wrap: nowrap;   /* 핵심: 무조건 한 줄로 */
-    overflow-x: auto;    /* 화면보다 커지면 옆으로 스크롤 가능하게 */
+    gap: 8px; /* 간격 조절 */
+    flex-wrap: nowrap; /* 6개가 한 줄에 나오도록 강제 */
 }
 
+/* 모바일 화면을 고려한 공 크기 조절 */
 .ball {
-    min-width: 40px;     /* 최소 폭 설정 */
-    height: 40px;        /* 휴대폰용으로 살짝 작게 */
-    font-size: 16px;
-    /* ... 나머지 동일 ... */
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+    /* ... 나머지 스타일 동일 ... */
+}
+
+/* 기록 영역 스타일 */
+.history-container {
+    margin-top: 40px;
+    padding: 20px;
+    border-top: 1px solid #ccc;
+}
+.history-item {
+    margin: 10px 0;
+    font-size: 14px;
 }

@@ -1,27 +1,30 @@
-/* result-container 수정 */
-.result-container {
-    margin-top: 50px;
-    display: flex;
-    justify-content: center;
-    gap: 8px; /* 간격 조절 */
-    flex-wrap: nowrap; /* 6개가 한 줄에 나오도록 강제 */
+:root { --main-theme: #ff9500; }
+
+body { 
+    margin: 0;
+    padding: 0;
+    /* 브라우저 UI에 영향받지 않게 높이 고정 */
+    height: 100dvh; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    background-color: #F8F9FA;
+    font-family: 'Arial', sans-serif;
+    /* 넘치지 않게 고정 */
+    overflow: hidden; 
 }
 
-/* 모바일 화면을 고려한 공 크기 조절 */
-.ball {
-    width: 45px;
-    height: 45px;
-    font-size: 18px;
-    /* ... 나머지 스타일 동일 ... */
-}
-
-/* 기록 영역 스타일 */
-.history-container {
-    margin-top: 40px;
-    padding: 20px;
-    border-top: 1px solid #ccc;
-}
-.history-item {
-    margin: 10px 0;
-    font-size: 14px;
+.calculator { 
+    background-color: #ffffff; 
+    padding: 20px; 
+    border-radius: 20px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+    width: 320px; 
+    /* 화면 높이에 따라 계산기 크기 조절 */
+    max-height: 95dvh; 
+    /* 내용이 넘칠 경우를 대비해 스크롤 허용 */
+    overflow-y: auto;
+    border: 1px solid #ddd; 
+    position: relative; 
+    z-index: 1; 
 }

@@ -21,7 +21,7 @@
         #side-menu.open { transform: translateX(0); }
 
         .menu-header { background: linear-gradient(135deg, var(--primary), #ff6b35); padding: 50px 24px 24px; position: relative; }
-        .menu-header h2 { font-family: 'Black Han Sans', sans-serif; color: white; font-size: 22px; }
+        .menu-header h2 { font-family: 'Noto Sans KR', sans-serif; font-weight: 700; color: white; font-size: 22px; }
         .closebtn { position: absolute; top: 14px; right: 18px; font-size: 26px; color: white; cursor: pointer; background: none; border: none; }
         .menu-body { padding: 24px; flex: 1; overflow-y: auto; }
         .menu-section-title { font-size: 11px; font-weight: 700; color: #6b7280; margin-bottom: 12px; }
@@ -34,7 +34,7 @@
         .app-wrapper { max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100dvh; }
         .app-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 16px; }
         .hamburger { width: 40px; height: 40px; background: var(--card); border-radius: 12px; border: none; cursor: pointer; color: var(--text); }
-        .app-title { font-family: 'Black Han Sans', sans-serif; font-size: 26px; color: var(--text); }
+        .app-title { font-family: 'Noto Sans KR', sans-serif; font-weight: 700; font-size: 26px; color: var(--text); }
         .app-title span { color: var(--primary); }
 
         .btn-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 0 16px 20px; }
@@ -44,7 +44,7 @@
         .btn-clear { background: #ff3b30; color: white; }
 
         .main-card { background: var(--card); margin: 0 16px; border-radius: 24px; padding: 24px 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        .number-card { background: #1a1a2e; border-radius: 18px; padding: 24px 16px; margin-top: 20px; min-height: 100px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        .number-card { background: #1a1a2e; border-radius: 18px; padding: 16px; margin-top: 20px; height: 90px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: nowrap; overflow: hidden; }
         .ball { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 15px; opacity: 0; transform: scale(0.5); transition: all 0.5s ease-out; }
         .ball.show { opacity: 1; transform: scale(1); }
         
@@ -56,6 +56,16 @@
 <body>
 
 <div id="overlay" onclick="closeMenu()"></div>
+
+<div id="confirm-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:center; justify-content:center;">
+    <div style="background:var(--card); border-radius:18px; padding:28px 24px; width:280px; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <p id="confirm-msg" style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:20px;"></p>
+        <div style="display:flex; gap:10px;">
+            <button onclick="confirmCancel()" style="flex:1; padding:11px; border:none; border-radius:10px; background:#e5e7eb; color:#374151; font-weight:700; font-size:14px; cursor:pointer;">취소</button>
+            <button onclick="confirmOk()" style="flex:1; padding:11px; border:none; border-radius:10px; background:#ff3b30; color:white; font-weight:700; font-size:14px; cursor:pointer;">삭제</button>
+        </div>
+    </div>
+</div>
 
 <nav id="side-menu">
     <div class="menu-header">
@@ -90,7 +100,7 @@
     <div class="btn-row">
         <button class="btn-gen" onclick="generateLotto()">🎲 추첨</button>
         <button class="btn-save" onclick="saveLotto()">💾 저장</button>
-        <button class="btn-clear" onclick="clearAll()">🗑 삭제</button>
+        <button class="btn-clear" onclick="clearAll()">🗑 전체삭제</button>
     </div>
 
     <div class="main-card">
@@ -100,7 +110,7 @@
     </div>
 
     <section class="history-section">
-        <h2 style="margin-bottom:10px; color: var(--text);">📜 추첨 기록</h2>
+        <h2 style="margin-bottom:10px; color: var(--text);">📜 저장 목록</h2>
         <div id="history-list"></div>
     </section>
 </div>
@@ -118,6 +128,10 @@
     }
 
     async function generateLotto() {
+        const genBtn = document.querySelector('.btn-gen');
+        genBtn.disabled = true;
+        genBtn.style.opacity = '0.5';
+
         currentNumbers = Array.from({length: 45}, (_, i) => i + 1).sort(() => Math.random() - 0.5).slice(0, 6).sort((a, b) => a - b);
         const res = document.getElementById('result');
         res.innerHTML = ''; 
@@ -130,6 +144,9 @@
             await new Promise(r => setTimeout(r, 400));
             ball.classList.add('show');
         }
+
+        genBtn.disabled = false;
+        genBtn.style.opacity = '1';
     }
 
     function setTheme(t, btn) {
@@ -137,6 +154,7 @@
         localStorage.setItem('lottoTheme', t);
         document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        closeMenu();
     }
 
     window.onload = () => {
@@ -155,10 +173,28 @@
         updateUI();
     }
 
-    function clearAll() { 
-        if(confirm("정말로 전체 기록을 삭제하시겠습니까?")) {
-            lottoHistory = []; localStorage.removeItem('lottoHistory'); updateUI(); 
-        }
+    let pendingAction = null;
+
+    function showConfirm(message, action) {
+        pendingAction = action;
+        document.getElementById('confirm-msg').textContent = message;
+        document.getElementById('confirm-modal').style.display = 'flex';
+    }
+
+    function confirmOk() {
+        document.getElementById('confirm-modal').style.display = 'none';
+        if(pendingAction) { pendingAction(); pendingAction = null; }
+    }
+
+    function confirmCancel() {
+        document.getElementById('confirm-modal').style.display = 'none';
+        pendingAction = null;
+    }
+
+    function clearAll() {
+        showConfirm("전체 기록을 삭제하시겠습니까?", () => {
+            lottoHistory = []; localStorage.removeItem('lottoHistory'); updateUI();
+        });
     }
     
     function updateUI() {
@@ -170,10 +206,10 @@
             </div>`).join('');
     }
     
-    function del(i) { 
-        if(confirm("이 기록을 삭제하시겠습니까?")) {
-            lottoHistory.splice(i, 1); localStorage.setItem('lottoHistory', JSON.stringify(lottoHistory)); updateUI(); 
-        }
+    function del(i) {
+        showConfirm("이 기록을 삭제하시겠습니까?", () => {
+            lottoHistory.splice(i, 1); localStorage.setItem('lottoHistory', JSON.stringify(lottoHistory)); updateUI();
+        });
     }
 
     updateUI();

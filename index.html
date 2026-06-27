@@ -129,8 +129,53 @@
 </div>
 
 <script>
-    // 총소리 추가
-    const shootSound = new Audio('https://www.soundjay.com/mechanical/sounds/gun-gunshot-01.mp3');
+    // 총소리 (Web Audio API 합성 - 외부 파일 없이 동작)
+    let audioCtx = null;
+    function playGunshot() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const ctx = audioCtx;
+
+        // 노이즈 버퍼 생성
+        const bufLen = ctx.sampleRate * 0.35;
+        const buffer = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1);
+
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        // 로우패스 필터 (둔탁한 발사음)
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1200, ctx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.15);
+
+        // 게인 엔벨로프 (빠른 어택, 빠른 감쇠)
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(1.2, ctx.currentTime + 0.003);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+
+        // 저주파 펀치감 (킥 느낌)
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(120, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.08);
+        const oscGain = ctx.createGain();
+        oscGain.gain.setValueAtTime(0.8, ctx.currentTime);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        osc.connect(oscGain);
+        oscGain.connect(ctx.destination);
+
+        noise.start(ctx.currentTime);
+        noise.stop(ctx.currentTime + 0.35);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.12);
+    }
 
     let lottoHistory = JSON.parse(localStorage.getItem('lottoHistory')) || [];
     let currentNumbers = [];
@@ -247,8 +292,7 @@
         if(!rouletteRunning || isStopping || bulletsLeft <= 0) return;
 
         // 총소리 재생
-        shootSound.currentTime = 0;
-        shootSound.play().catch(e => console.log("소리 재생 실패"));
+        playGunshot();
 
         let num = getCenterNum();
         if(hitNumbers.includes(num)) {

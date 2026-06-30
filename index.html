@@ -277,12 +277,12 @@
         if(bulletsLeft === 0) { resetRoulette(); return; }
         rouletteRunning = true;
         isStopping = false;
-        rouletteSpeed = 8;
+        rouletteSpeed = 4;
         document.getElementById('startBtn').textContent = '🔄 진행중...';
         document.getElementById('shootBtn').style.display = 'inline-block';
         let accel = 0;
         rouletteInterval = setInterval(() => {
-            if(accel < 60) { accel++; rouletteSpeed = Math.min(18, 4 + accel * 0.25); }
+            if(accel < 60) { accel++; rouletteSpeed = Math.min(8, 2 + accel * 0.1); }
             rouletteOffset += rouletteSpeed;
             applyOffset();
         }, 16);

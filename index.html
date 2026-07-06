@@ -21,7 +21,7 @@
         #side-menu.open { transform: translateX(0); }
 
         .menu-header { background: linear-gradient(135deg, var(--primary), #ff6b35); padding: 50px 24px 24px; position: relative; }
-        .menu-header h2 { font-family: 'Black Han Sans', sans-serif; color: white; font-size: 22px; }
+        .menu-header h2 { font-family: 'Noto Sans KR', sans-serif; font-weight: 700; color: white; font-size: 22px; }
         .closebtn { position: absolute; top: 14px; right: 18px; font-size: 26px; color: white; cursor: pointer; background: none; border: none; }
         .menu-body { padding: 24px; flex: 1; overflow-y: auto; }
         .menu-section-title { font-size: 11px; font-weight: 700; color: #6b7280; margin-bottom: 12px; }
@@ -365,6 +365,7 @@
         localStorage.setItem('lottoTheme', t);
         document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        closeMenu();
     }
 
     window.onload = () => {
@@ -374,8 +375,22 @@
         buildStrip();
     };
 
-    function openMenu() { document.getElementById('side-menu').classList.add('open'); document.getElementById('overlay').classList.add('active'); }
-    function closeMenu() { document.getElementById('side-menu').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); }
+    function openMenu() {
+        document.getElementById('side-menu').classList.add('open');
+        document.getElementById('overlay').classList.add('active');
+        history.pushState({ menuOpen: true }, '');
+    }
+    function closeMenu() {
+        document.getElementById('side-menu').classList.remove('open');
+        document.getElementById('overlay').classList.remove('active');
+        if(history.state && history.state.menuOpen) {
+            history.back();
+        }
+    }
+    window.addEventListener('popstate', () => {
+        document.getElementById('side-menu').classList.remove('open');
+        document.getElementById('overlay').classList.remove('active');
+    });
 
     function saveLotto() {
         if(currentNumbers.length === 0) { alert("추첨 먼저!"); return; }
